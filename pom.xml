@@ -25,7 +25,11 @@
             <artifactId>commons-cli</artifactId>
             <version>1.5.0</version> <!-- Use the latest version -->
         </dependency>
-
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>5.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>
