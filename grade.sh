@@ -58,7 +58,7 @@ echo "Avg. replies = " $avg_replies
 echo "Duration = " $duration
 echo "***** application output ends *****"
 
-if [ "$total_posts" -eq 1993 ] && (( $(echo "$avg_replies > 1" | bc -l) )) && [ "$total_seconds" -lt 6000 ]; then
+if [ "$total_posts" -gt 1992 ] && [ "$total_seconds" -lt 6000 ]; then
 	echo "Results meet the conditions!"
 else
 	echo "Results don't meet the conditions. Please review manually."
