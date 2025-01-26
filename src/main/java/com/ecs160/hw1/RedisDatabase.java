@@ -32,21 +32,22 @@ public class RedisDatabase {
                 "text" -> "Here in my garage"
                 "replyCount" -> "0"
      */
-    public String storePost(String author, String postContent, int replyCount){
+    public String storePost(String author, String postDate, String postContent, int replyCount){
         // generate a uniqueID for the post such as 1
         String postId = generateId("postId");
         jedis.hset("post:" + postId, "author", author);
+        jedis.hset("post:" + postId, "postDate", postDate);
         jedis.hset("post:" + postId, "text", postContent);
         jedis.hset("post:" + postId, "replyCount", String.valueOf(replyCount));
         return postId;
     }
 
     // Store replies and link to post
-    public String storeReply(String postId, String author, String text){
+    public String storeReply(String parentPostId, String author, String text){
         String replyId = generateId("replyId");
         jedis.hset("reply:" + replyId, "author", author);
         jedis.hset("reply:" + replyId, "text", text);
-        jedis.hset("reply:" + replyId, "originalPostId", postId);
+        jedis.hset("reply:" + replyId, "originalPostId", parentPostId);
 
         // link reply to post
         // uses a set data structure to join posts with replies
@@ -56,7 +57,7 @@ public class RedisDatabase {
                 Set Members:
                     "3", "4"
          */
-        jedis.sadd("replies:post" + postId, replyId);
+        jedis.sadd("replies:post" + parentPostId, replyId);
         return replyId;
     }
 
