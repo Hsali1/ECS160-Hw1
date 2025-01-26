@@ -112,6 +112,11 @@ public class SocialMediaAnalyzerDriver {
 
                 for (var threadElement : feedArray){
                     // Parse each thread into an object of type Thread
+                    if (threadElement.getAsJsonObject().has("thread")) {
+                        JsonObject threadObject = threadElement.getAsJsonObject().get("thread").getAsJsonObject();
+                    } else {
+                        continue;
+                    }
                     JsonObject threadObject = threadElement.getAsJsonObject().get("thread").getAsJsonObject();
                     Thread thread = processThread(threadObject, gson);
 
@@ -134,6 +139,7 @@ public class SocialMediaAnalyzerDriver {
             }
         } catch (Exception e){
             System.err.println("Error parsing Json File: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
