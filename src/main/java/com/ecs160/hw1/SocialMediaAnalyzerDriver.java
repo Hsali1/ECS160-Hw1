@@ -41,59 +41,84 @@ public class SocialMediaAnalyzerDriver {
     }
 
     public static Thread processThread(JsonObject threadObject, Gson gson){
-        // Parse the main post
-        JsonObject postObject = threadObject.getAsJsonObject("post");
-
-        // Initialize variables with default values
+        // Initialize default values
         String authorName = "Unknown Author";
         String postDate = "Unknown Date";
         String postContent = "No Content";
         int replyCount = 0;
 
+        Post post = null;
+
         try {
-            // Check if "author" exists and get "displayName"
-            if (postObject.has("author") && postObject.get("author").getAsJsonObject().has("displayName")) {
-                authorName = postObject.getAsJsonObject("author").get("displayName").getAsString();
+            // Parse the main post
+            if (threadObject.has("post") && threadObject.get("post").isJsonObject()) {
+                JsonObject postObject = threadObject.getAsJsonObject("post");
+
+                // Extract post details
+                if (postObject.has("author") && postObject.get("author").isJsonObject()) {
+                    JsonObject authorObject = postObject.getAsJsonObject("author");
+                    if (authorObject.has("displayName")) {
+                        authorName = authorObject.get("displayName").getAsString();
+                    }
+                }
+
+                if (postObject.has("record") && postObject.get("record").isJsonObject()) {
+                    JsonObject recordObject = postObject.getAsJsonObject("record");
+                    if (recordObject.has("createdAt")) {
+                        postDate = recordObject.get("createdAt").getAsString();
+                    }
+                    if (recordObject.has("text")) {
+                        postContent = recordObject.get("text").getAsString();
+                    }
+                }
+
+                // Create the Post object
+                post = new Post(authorName, postDate, postContent, replyCount);
             }
 
-            // Check if "record" exists and contains "createdAt" and "text"
-            if (postObject.has("record") && postObject.get("record").isJsonObject()) {
-                JsonObject recordObject = postObject.getAsJsonObject("record");
-                if (recordObject.has("createdAt")) {
-                    postDate = recordObject.get("createdAt").getAsString();
-                }
-                if (recordObject.has("text")) {
-                    postContent = recordObject.get("text").getAsString();
-                }
-            }
-
-            // Use the actual array size for reply count
+            // Parse replies (if any)
+            List<Thread> replies = new ArrayList<>();
             if (threadObject.has("replies") && threadObject.get("replies").isJsonArray()) {
-                replyCount = threadObject.getAsJsonArray("replies").size();
+                JsonArray repliesArray = threadObject.getAsJsonArray("replies");
+                replyCount = repliesArray.size();
+
+                for (JsonElement replyElement : repliesArray) {
+                    if (replyElement.isJsonObject()) {
+                        Thread replyThread = processThread(replyElement.getAsJsonObject(), gson);
+                        if (replyThread != null) {
+                            replies.add(replyThread);
+                        }
+                    }
+                }
             }
+
+            return new Thread(post, replies);
 
         } catch (Exception e) {
-            System.err.println("Error parsing post: " + e.getMessage());
+            System.err.println("Error processing thread: " + e.getMessage());
+            return null;
         }
+    }
 
-        // Create the Post object
-        Post post = new Post(authorName, postDate, postContent, replyCount);
+    public static void storeReplies(List<Thread> replies, String parentPostId, RedisDatabase redisDb){
+        if (replies == null || replies.isEmpty()) return;
 
-        // Parse the replies (if any)
-        List<Thread> replies = null;
-        if (threadObject.has("replies") && threadObject.get("replies").isJsonArray()){
-            JsonArray repliesArray = threadObject.getAsJsonArray("replies");
-            replies = new ArrayList<>();
+        for (Thread replyThread : replies){
+            Post replyPost = replyThread.getPost();
 
-            for (var replyElement : repliesArray){
-                JsonObject replyThreadObject = replyElement.getAsJsonObject();
-                // Parse each reply recursively as a Thread
-                Thread replyThread = processThread(replyThreadObject, gson);
-                replies.add(replyThread);
-            }
+            // Store the reply and link to the parent post
+            String replyId = redisDb.storeReply(
+                    parentPostId,
+                    replyPost.getAuthorName(),
+                    replyPost.getPostContent()
+            );
+
+            // Update reply count for the parent post (just for safety)
+            redisDb.updateReplyCount(parentPostId, redisDb.getReplies(parentPostId).size());
+
+            // Use recursion to handle nested replies
+            storeReplies(replyThread.getReplies(), replyId, redisDb);
         }
-
-        return new Thread(post, replies);
     }
 
     public static void parseDataIntoDatabase(String jsonFile, RedisDatabase redisDb){
@@ -104,19 +129,16 @@ public class SocialMediaAnalyzerDriver {
             Gson gson = new Gson();
 
             // Use Gson to first parse the feed array
-            var jsonElement = JsonParser.parseReader(reader);
+            var jsonElement = JsonParser.parseReader(reader).getAsJsonObject();
 
 //            System.out.print(jsonElement); // prints everything starting with {"feed":[{"thread":
-            if (jsonElement.isJsonObject() && jsonElement.getAsJsonObject().has("feed")){
-                var feedArray = jsonElement.getAsJsonObject().get("feed").getAsJsonArray();
+            if (jsonElement.has("feed") && jsonElement.get("feed").isJsonArray()){
+                var feedArray = jsonElement.get("feed").getAsJsonArray();
 
                 for (var threadElement : feedArray){
                     // Parse each thread into an object of type Thread
-                    if (threadElement.getAsJsonObject().has("thread")) {
-                        JsonObject threadObject = threadElement.getAsJsonObject().get("thread").getAsJsonObject();
-                    } else {
-                        continue;
-                    }
+                    if (!(threadElement.getAsJsonObject().has("thread"))) continue;
+
                     JsonObject threadObject = threadElement.getAsJsonObject().get("thread").getAsJsonObject();
                     Thread thread = processThread(threadObject, gson);
 
@@ -127,14 +149,21 @@ public class SocialMediaAnalyzerDriver {
 //                    System.out.println("Post Date: " + post.getPostDate());
 //                    System.out.println("Reply Count: " + post.getReplyCount());
                     // Store Original Post in Redis
-                    Post originalPost = thread.getPost();
-                    String authorName = originalPost.getAuthorName();
-                    String postDate = originalPost.getPostDate();
-                    String postContent = originalPost.getPostContent();
-                    int replyCount = originalPost.getReplyCount();
-                    String postId = redisDb.storePost(authorName, postDate, postContent, replyCount);
-                    System.out.println("Loaded post from author: " + authorName);
-                    System.out.println("Post Content:\n" + postContent);
+                    if (thread != null){
+                        Post originalPost = thread.getPost();
+                        String parentPostId = redisDb.storePost(
+                                originalPost.getAuthorName(),
+                                convertTimestamp(originalPost.getPostDate()),
+                                originalPost.getPostContent(),
+                                originalPost.getReplyCount()
+                        );
+                        System.out.println("Loaded post from author: " + originalPost.getAuthorName());
+                        System.out.println("Post Content:\n" + originalPost.getPostContent());
+
+                        // Store Reply
+                        storeReplies(thread.getReplies(), parentPostId, redisDb);
+                        System.out.println("Stored replies successfully.");
+                    }
                 }
             }
         } catch (Exception e){
