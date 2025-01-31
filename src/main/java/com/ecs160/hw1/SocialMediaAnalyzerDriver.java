@@ -180,17 +180,32 @@ public class SocialMediaAnalyzerDriver {
 
         RedisDatabase redisDb = new RedisDatabase("localhost", 6379);
         try {
+            // weighted = true if args[0] == "true"; weighted = false otherwise
+            Boolean weighted = Boolean.parseBoolean(args[0]);   // parseBoolean is case insensitive
 
             String inputFile = "input.json"; // Default file
-            if (args.length > 0) {
-                inputFile = args[0];
+            if (args.length > 1) {
+                inputFile = args[1];
             }
 
             // Store json data into database
             parseDataIntoDatabase(inputFile, redisDb);
 
             // Do the required statistics
+            SocialMediaAnalyzer analyzer = new SocialMediaAnalyzer(redisDb);
+            if (weighted) {
+                System.out.println("Weighted total posts: " + analyzer.weightedTotalPosts());
+                System.out.println("Weighted average replies per post: " + analyzer.weightedAverageRepliesPerPost());
+            } else {
+                System.out.println("Total posts: " + analyzer.countPosts());
+                System.out.println("Average replies per post: " + analyzer.averageRepliesPerPost());
+            }
 
+            for (String postId : analyzer.averageCommentInterval().keySet()) {
+                String interval = analyzer.averageCommentInterval().get(postId);
+                System.out.println("Post ID: " + postId + ", Avg interval between comments: " + interval);
+            }
+            
         } catch (Exception e) {
             log.error("Error connecting to Redis: ", e);
         } finally {
