@@ -72,6 +72,11 @@ public class SocialMediaAnalyzerDriver {
                     }
                 }
 
+                if (threadObject.has("replies") && threadObject.get("replies").isJsonArray()) {
+                    JsonArray repliesArray = threadObject.getAsJsonArray("replies");
+                    replyCount = repliesArray.size();
+                }
+
                 // Create the Post object
                 post = new Post(authorName, postDate, postContent, replyCount);
             }
@@ -80,7 +85,6 @@ public class SocialMediaAnalyzerDriver {
             List<Thread> replies = new ArrayList<>();
             if (threadObject.has("replies") && threadObject.get("replies").isJsonArray()) {
                 JsonArray repliesArray = threadObject.getAsJsonArray("replies");
-                replyCount = repliesArray.size();
 
                 for (JsonElement replyElement : repliesArray) {
                     if (replyElement.isJsonObject()) {
@@ -113,8 +117,8 @@ public class SocialMediaAnalyzerDriver {
                     replyPost.getPostContent()
             );
 
-            // Update reply count for the parent post (just for safety)
-            redisDb.updateReplyCount(parentPostId, redisDb.getReplies(parentPostId).size());
+//            // Update reply count for the parent post (just for safety)
+//            redisDb.updateReplyCount(parentPostId, redisDb.getReplies(parentPostId).size());
 
             // Use recursion to handle nested replies
             storeReplies(replyThread.getReplies(), replyId, redisDb);
