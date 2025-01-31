@@ -80,6 +80,11 @@ public class RedisDatabase {
         return jedis.hgetAll("reply:" + replyId);
     }
 
+    public String getReplyCount(String postId) {
+        String replyCountStr = jedis.hget("post:" + postId, "replyCount");
+        return (replyCountStr != null) ? replyCountStr : "0";
+    }
+
     public Set<String> getKeys(String pattern) {
         return jedis.keys(pattern);
     }

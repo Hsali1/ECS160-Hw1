@@ -161,12 +161,12 @@ public class SocialMediaAnalyzerDriver {
                                 originalPost.getPostContent(),
                                 originalPost.getReplyCount()
                         );
-                        System.out.println("Loaded post from author: " + originalPost.getAuthorName());
-                        System.out.println("Post Content:\n" + originalPost.getPostContent());
+//                        System.out.println("Loaded post from author: " + originalPost.getAuthorName());
+//                        System.out.println("Post Content:\n" + originalPost.getPostContent());
 
                         // Store Reply
                         storeReplies(thread.getReplies(), parentPostId, redisDb);
-                        System.out.println("Stored replies successfully.");
+//                        System.out.println("Stored replies successfully.");
                     }
                 }
             }

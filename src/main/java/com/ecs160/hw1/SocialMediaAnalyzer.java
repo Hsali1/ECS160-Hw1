@@ -70,7 +70,7 @@ public class SocialMediaAnalyzer {
         for (String postKey : postKeys) {
             String postId = postKey.split(":")[1];  // post:postId
                                                             // 0    1
-            String replyCount = redisDb.getReplyCount(postKey);
+            String replyCount = redisDb.getReplyCount(postId);
 
             numOfReplies.put(postId, Integer.parseInt(replyCount));
         }
@@ -78,6 +78,7 @@ public class SocialMediaAnalyzer {
 
     // average replies per post
     public double averageRepliesPerPost() {
+        countReplies();
         int totalReplies = 0;
         int totalPosts = numOfReplies.size(); // total posts will be the size of the map
 
