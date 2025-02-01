@@ -42,6 +42,7 @@ public class RedisDatabase {
         jedis.hset(postId, "postDate", postDate);
         jedis.hset(postId, "text", postContent);
         jedis.hset(postId, "replyCount", String.valueOf(replyCount));
+
         return postId;
     }
 
@@ -62,6 +63,11 @@ public class RedisDatabase {
                     "3", "4"
          */
         jedis.sadd(parentPostId + ":replies", replyId);
+
+        // Update replyCount
+        long replyCount = jedis.scard(parentPostId + ":replies"); // Get the actual count of replies
+        jedis.hset(parentPostId, "replyCount", String.valueOf(replyCount));
+
         return replyId;
     }
 
