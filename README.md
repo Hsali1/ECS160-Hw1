@@ -29,5 +29,6 @@ java -jar target/HW1-solution-1.0-SNAPSHOT.jar {weighted} [file name]
 
 ```
 weighted = true | false
-file name is optional, the default used is src/main/resources/input.json
+
+The default filename used is src/main/resources/input.json
 
