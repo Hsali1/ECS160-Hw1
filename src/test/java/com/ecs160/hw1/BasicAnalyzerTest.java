@@ -32,10 +32,13 @@
 //    @Test
 //    public void testStorePost(){
 //        String postId = redisDb.storePost("TestUser1", "2025-1-1 1:00:00", "Test post content", 0);
+//
 //        Map<String, String> post = redisDb.getPost(postId);
+//        System.out.println("DEBUG: Post ID retrieved -> " + postId);
+//        System.out.println("DEBUG: Actual Post Data -> " + post);
 //
 //        assertNotNull(post);
-//        assertEquals("TestUser1", post.);
+//        assertEquals("TestUser1", post.get("author"));
 //        assertEquals("Test post content", post.get("text"));
 //        assertEquals("0", post.get("replyCount"));
 //    }

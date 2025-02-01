@@ -44,9 +44,12 @@ public class SocialMediaAnalyzer {
 
     private final Map<String, Integer> numOfReplies;
 
+    private final int longestPost;
+
     public SocialMediaAnalyzer(RedisDatabase redisDb){
         this.redisDb = redisDb;
         this.numOfReplies = new HashMap<>();
+        this.longestPost = longestPost();
     }
 
     private LocalDateTime parseDate(String date){
@@ -182,8 +185,7 @@ public class SocialMediaAnalyzer {
 
     /* Weight = (1 + (NumOfWordsInPost / NumOfWordsInLongestPost)) */
     public double postWeight(String postId) {
-        int longestPostLength = longestPost();
-        if (longestPostLength == 0)
+        if (longestPost  == 0)
             return 0;
         Map<String, String> post = redisDb.getPost(postId);
         // retrieve post content
@@ -191,11 +193,10 @@ public class SocialMediaAnalyzer {
         // count words in post
         int numOfWordsInPost = countWords(postContent);
         // calculate weight
-        return (double) (1 + (numOfWordsInPost / longestPostLength));
+        return (double) (1 + (numOfWordsInPost / longestPost));
     }
     public double replyWeight(String replyId) {
-        int longestPostLength = longestPost();
-        if (longestPostLength == 0)
+        if (longestPost  == 0)
             return 0;
         Map<String, String> reply = redisDb.getReply(replyId);
         // retrieve post content
@@ -203,7 +204,7 @@ public class SocialMediaAnalyzer {
         // count words in post
         int numOfWordsInPost = countWords(replyContent);
         // calculate weight
-        return (double) (1 + (numOfWordsInPost / longestPostLength));
+        return (double) (1 + (numOfWordsInPost / longestPost ));
     }
 
 
@@ -232,6 +233,7 @@ public class SocialMediaAnalyzer {
             }
             Set<String> replyKeys = redisDb.getReplies(postKey);
             for (String replyKey : replyKeys) {
+                if (!replyKey.startsWith("reply:")) continue;
                 // retrieve each reply
                 Map<String, String> reply = redisDb.getReply(replyKey);
                 // retrieve post content
