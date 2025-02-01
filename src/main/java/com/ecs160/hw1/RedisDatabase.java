@@ -77,7 +77,6 @@ public class RedisDatabase {
     // Get all replies for a post
     public Set<String> getReplies(String key){
         // The key for retrieving replies is always "<key>:replies"
-
         // post:1690
         String replyKey = key + ":replies";
         // post:1690:replies

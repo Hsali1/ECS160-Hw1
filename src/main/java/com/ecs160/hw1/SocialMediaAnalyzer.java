@@ -64,6 +64,9 @@ public class SocialMediaAnalyzer {
 
         // for each post, retrieve replyCount
         for (String postKey : postKeys) {
+            if (postKey.endsWith(":replies")) {
+                continue;
+            }
             String postId = postKey.split(":")[1];  // post:postId
             // 0    1
             String replyCount = redisDb.getReplyCount(postId);
@@ -95,7 +98,10 @@ public class SocialMediaAnalyzer {
         // for each post
         for (String postKey : postKeys) {
             String postId = postKey.split(":")[1];
-
+            // Check if the key already ends with ":replies"
+            if (postKey.endsWith(":replies")) {
+                continue;
+            }
             Set<String> replyKeys = redisDb.getReplies(postKey);
 
             // if there are replies on the post
@@ -207,7 +213,9 @@ public class SocialMediaAnalyzer {
         double totalWeight = 0;
         Set<String> postKeys = redisDb.getKeys("post:*");
         for (String postKey : postKeys) {
-            totalWeight += postWeight(postKey);
+            if (postKey.endsWith(":replies")) continue;
+            String postId = postKey.split(":")[1];
+            totalWeight += postWeight(postId);
         }
         return totalWeight;
     }
@@ -219,6 +227,9 @@ public class SocialMediaAnalyzer {
         Set<String> postKeys = redisDb.getKeys("post:*");
         for (String postKey : postKeys) {
             // String postId = postKey.split(":")[1];
+            if (postKey.endsWith(":replies")) {
+                continue;
+            }
             Set<String> replyKeys = redisDb.getReplies(postKey);
             for (String replyKey : replyKeys) {
                 // retrieve each reply
