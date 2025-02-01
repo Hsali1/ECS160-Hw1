@@ -64,9 +64,12 @@ public class RedisDatabase {
          */
         jedis.sadd(parentPostId + ":replies", replyId);
 
+        // System.out.println("DEBUG: Before updating replyCount -> " + jedis.smembers(parentPostId + ":replies"));
         // Update replyCount
         long replyCount = jedis.scard(parentPostId + ":replies"); // Get the actual count of replies
         jedis.hset(parentPostId, "replyCount", String.valueOf(replyCount));
+//        System.out.println("DEBUG: After updating replyCount -> " + jedis.smembers(parentPostId + ":replies"));
+//        System.out.println("DEBUG: replyCount set to -> " + replyCount);
 
         return replyId;
     }

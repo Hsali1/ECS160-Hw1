@@ -202,11 +202,10 @@ public class SocialMediaAnalyzerDriver {
                 System.out.println("Average replies per post: " + analyzer.averageRepliesPerPost());
             }
 
-            for (String postId : analyzer.averageCommentInterval().keySet()) {
-                String interval = analyzer.averageCommentInterval().get(postId);
-                System.out.println("Post ID: " + postId + ", Avg interval between comments: " + interval);
-            }
-            
+
+            System.out.println("Overall average interval between comments: " + analyzer.averageCommentInterval());
+
+
         } catch (Exception e) {
             log.error("Error connecting to Redis: ", e);
         } finally {

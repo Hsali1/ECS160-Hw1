@@ -94,67 +94,107 @@ public class SocialMediaAnalyzer {
             return 0;
     }
 
-    // average interval between comments
-    public Map<String,String> averageCommentInterval() {
-        Map<String,String> avgIntervals = new HashMap<>();
+    // Average interval between comments
+    public String averageCommentInterval() {
+        List<Long> allIntervals = new ArrayList<>();
         Set<String> postKeys = redisDb.getKeys("post:*");
-        // for each post
-        for (String postKey : postKeys) {
-            String postId = postKey.split(":")[1];
-            // Check if the key already ends with ":replies"
-            if (postKey.endsWith(":replies")) {
-                continue;
-            }
-            Set<String> replyKeys = redisDb.getReplies(postKey);
+        try {
+            for (String postKey : postKeys) {
+                if (postKey.endsWith(":replies")) {
+                    continue;
+                }
 
-            // if there are replies on the post
-            if (replyKeys != null && !replyKeys.isEmpty()) {
+                String key = postKey.split(":")[1];
+                Set<String> replyKeys = redisDb.getReplies(postKey);
+                if (replyKeys == null || replyKeys.isEmpty()) {
+                    continue;
+                }
+
                 List<LocalDateTime> postDates = new ArrayList<>();
 
-                Map<String, String> post = redisDb.getPost(postId);
-                String postDate = post.get("postDate");
-                postDates.add(parseDate(postDate));
+                // Fetch post data
+                Map<String, String> post = redisDb.getPost(key);
+                if (post == null || !post.containsKey("postDate")) {
+                    continue;
+                }
 
-                //Set<String> replyKeys = redisDb.getReplies(postId);
+                String postDate = post.get("postDate");
+                if (postDate == null || postDate.isEmpty()) {
+                    continue;
+                }
+
+                // Add post date
+                try {
+                    postDates.add(parseDate(postDate));
+                } catch (Exception e) {
+                    continue;
+                }
+
+                // Fetch and add reply timestamps
                 for (String replyKey : replyKeys) {
-                    Map<String, String> reply = redisDb.getReply(replyKey);
+//                    System.out.println("replykey-->" + replyKey);
+                    String replyK = replyKey.split(":")[1];
+                    Map<String, String> reply = redisDb.getReply(replyK);
+                    if (reply == null || !reply.containsKey("postDate")) {
+                        continue;
+                    }
+
                     String replyDate = reply.get("postDate");
-                    postDates.add(parseDate(replyDate));
+                    if (replyDate == null || replyDate.isEmpty()) {
+                        continue;
+                    }
+
+                    try {
+                        postDates.add(parseDate(replyDate));
+                    } catch (Exception e) {
+//                        System.out.println("ERROR: Invalid date format for reply -> " + replyKey + " | Date: " + replyDate);
+                        continue;
+                    }
                 }
 
                 Collections.sort(postDates);
 
-                // calculate interval between subsequent comments
+                // Calculate intervals
                 List<Long> intervals = new ArrayList<>();
                 for (int i = 0; i < postDates.size() - 1; i++) {
-                    LocalDateTime a = postDates.get(i);
-                    LocalDateTime b = postDates.get(i + 1);
-                    long interval = java.time.Duration.between(a, b).getSeconds();
-                    // store each difference in a temp array
+                    long interval = java.time.Duration.between(postDates.get(i), postDates.get(i + 1)).getSeconds();
                     intervals.add(interval);
                 }
 
-                // calculate avg at the end
                 if (!intervals.isEmpty()) {
-                    long totalSec = 0;
+                    long sum = 0;
                     for (long interval : intervals) {
-                        totalSec += interval;
+                        sum += interval;
                     }
-                    long averageSec = totalSec / intervals.size();
-
-                    long hours = averageSec / 3600;             // 3600 secs in an hour
-                    long minutes = (averageSec % 3600) / 60;    // 60 secs in a min
-                    long seconds = averageSec % 60;             // any leftover secs
-
-                    String avgInterval = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-                    // store each avg in map
-                    avgIntervals.put(postId, avgInterval);
+                    long avgForPost = sum / intervals.size();
+                    allIntervals.add(avgForPost);
                 }
-
             }
+
+            // Compute final average interval
+            if (allIntervals.isEmpty()) {
+                return "No valid interval";
+            }
+
+            long totalSum = 0;
+            for (long interval : allIntervals) {
+                totalSum += interval;
+            }
+            long finalAvg = totalSum / allIntervals.size();
+
+            long hours = finalAvg / 3600;
+            long minutes = (finalAvg % 3600) / 60;
+            long seconds = finalAvg % 60;
+
+            return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+
+        } catch (Exception e) {
+            System.err.println("ERROR: Exception in averageCommentInterval()");
+            e.printStackTrace();
+            return "Error occurred";
         }
-        return avgIntervals;
     }
+
 
     private int countWords(String postContents) {
         if (postContents == null || postContents.isEmpty())
