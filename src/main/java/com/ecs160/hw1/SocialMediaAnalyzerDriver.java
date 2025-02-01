@@ -114,7 +114,8 @@ public class SocialMediaAnalyzerDriver {
             String replyId = redisDb.storeReply(
                     parentPostId,
                     replyPost.getAuthorName(),
-                    replyPost.getPostContent()
+                    replyPost.getPostContent(),
+                    convertTimestamp(replyPost.getPostDate())
             );
 
 //            // Update reply count for the parent post (just for safety)

@@ -43,10 +43,11 @@ public class RedisDatabase {
     }
 
     // Store replies and link to post
-    public String storeReply(String parentPostId, String author, String text){
+    public String storeReply(String parentPostId, String author, String text,  String postDate){
         String replyId = "reply:" + generateId("replyId");
         jedis.hset(replyId, "author", author);
         jedis.hset(replyId, "text", text);
+        jedis.hset(replyId, "postDate", postDate);
         jedis.hset(replyId, "originalPostId", parentPostId);
 
         // link reply to post
