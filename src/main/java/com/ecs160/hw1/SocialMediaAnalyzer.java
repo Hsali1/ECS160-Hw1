@@ -43,14 +43,10 @@ public class SocialMediaAnalyzer {
     private final RedisDatabase redisDb;
 
     private final Map<String, Integer> numOfReplies;
-    private final Map<String, String> averageCommentIntervals;
-    private int longestPost = -1;
 
     public SocialMediaAnalyzer(RedisDatabase redisDb){
         this.redisDb = redisDb;
         this.numOfReplies = new HashMap<>();
-        this.averageCommentIntervals = averageCommentInterval();
-        longestPost = longestPost();
     }
 
     private LocalDateTime parseDate(String date){
@@ -69,7 +65,7 @@ public class SocialMediaAnalyzer {
         // for each post, retrieve replyCount
         for (String postKey : postKeys) {
             String postId = postKey.split(":")[1];  // post:postId
-                                                            // 0    1
+            // 0    1
             String replyCount = redisDb.getReplyCount(postId);
 
             numOfReplies.put(postId, Integer.parseInt(replyCount));
@@ -100,7 +96,7 @@ public class SocialMediaAnalyzer {
         for (String postKey : postKeys) {
             String postId = postKey.split(":")[1];
 
-            Set<String> replyKeys = redisDb.getReplies(postId);
+            Set<String> replyKeys = redisDb.getReplies(postKey);
 
             // if there are replies on the post
             if (replyKeys != null && !replyKeys.isEmpty()) {
@@ -147,9 +143,6 @@ public class SocialMediaAnalyzer {
                 }
 
             }
-            //else
-                // if there are no replies, there is no interval? either 0 or don't insert at all?
-                //averageCommentIntervals.put(postId, "00:00:00");
         }
         return avgIntervals;
     }
@@ -183,7 +176,8 @@ public class SocialMediaAnalyzer {
 
     /* Weight = (1 + (NumOfWordsInPost / NumOfWordsInLongestPost)) */
     public double postWeight(String postId) {
-        if (longestPost == 0)
+        int longestPostLength = longestPost();
+        if (longestPostLength == 0)
             return 0;
         Map<String, String> post = redisDb.getPost(postId);
         // retrieve post content
@@ -191,8 +185,21 @@ public class SocialMediaAnalyzer {
         // count words in post
         int numOfWordsInPost = countWords(postContent);
         // calculate weight
-        return (double) (1 + (numOfWordsInPost / longestPost));
+        return (double) (1 + (numOfWordsInPost / longestPostLength));
     }
+    public double replyWeight(String replyId) {
+        int longestPostLength = longestPost();
+        if (longestPostLength == 0)
+            return 0;
+        Map<String, String> reply = redisDb.getReply(replyId);
+        // retrieve post content
+        String replyContent = reply.get("text");
+        // count words in post
+        int numOfWordsInPost = countWords(replyContent);
+        // calculate weight
+        return (double) (1 + (numOfWordsInPost / longestPostLength));
+    }
+
 
     /* WeightedTotalPosts = (Summation from n=1 to N (Weight_n))
     Here, N is the total number of posts, and Weight_n is the weight of the post n. */
@@ -211,14 +218,13 @@ public class SocialMediaAnalyzer {
         double totalWeight = 0;
         Set<String> postKeys = redisDb.getKeys("post:*");
         for (String postKey : postKeys) {
-            String postId = postKey.split(":")[1];
-            Set<String> replyKeys = redisDb.getReplies(postId);
+            // String postId = postKey.split(":")[1];
+            Set<String> replyKeys = redisDb.getReplies(postKey);
             for (String replyKey : replyKeys) {
                 // retrieve each reply
-                Map<String, String> post = redisDb.getReply(replyKey);
+                Map<String, String> reply = redisDb.getReply(replyKey);
                 // retrieve post content
-                String replyContent = post.get("text");
-                totalWeight += postWeight(replyContent);
+                totalWeight += replyWeight(replyKey);
             }
         }
         return totalWeight / postKeys.size();

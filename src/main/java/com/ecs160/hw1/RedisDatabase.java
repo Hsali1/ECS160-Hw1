@@ -1,6 +1,9 @@
 package com.ecs160.hw1;
 
 import redis.clients.jedis.Jedis;
+
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -68,12 +71,36 @@ public class RedisDatabase {
 
     // Get a post by ID
     public Map<String, String> getPost(String postId){
-        return jedis.hgetAll("Post:" + postId);
+        return jedis.hgetAll("post:" + postId);
     }
 
     // Get all replies for a post
-    public Set<String> getReplies(String postId){
-        return jedis.smembers("replies:post:" + postId);
+    public Set<String> getReplies(String key){
+        // The key for retrieving replies is always "<key>:replies"
+
+        // post:1690
+        String replyKey = key + ":replies";
+        // post:1690:replies
+
+        // If the key doesn't exist, return an empty set
+        if (!jedis.exists(replyKey)) {
+            return new HashSet<>();
+        }
+
+        Set<String> allReplies = new HashSet<>();
+        // Fetch all immediate replies from Redis
+        Set<String> directReplies = jedis.smembers(replyKey);
+
+        if (directReplies != null && !directReplies.isEmpty()) {
+            for (String reply  : directReplies) {
+                // Add the immediate reply
+                allReplies.add(reply);
+
+                // Recursively collect nested replies
+                allReplies.addAll(getReplies(reply));
+            }
+        }
+        return allReplies;
     }
 
     // Retrieve a reply by replyId
@@ -90,6 +117,9 @@ public class RedisDatabase {
         return jedis.keys(pattern);
     }
 
+    public void flushAll(){
+        jedis.flushAll();
+    }
     // Close connection
     public void close(){
         if (jedis != null){
