@@ -30,18 +30,19 @@ Results:
 1.
     >java -jar target/HW1-solution-1.0-SNAPSHOT.jar false
     Connected to Redis!
-    Total posts: 3256
+    Total posts: 1995
     Average replies per post: 1.5167919799498746
     Overall average interval between comments: 04:35:10
     Redis connection ended...
 
 2.
-    java -jar target/HW1-solution-1.0-SNAPSHOT.jar true
+    >java -jar target/HW1-solution-1.0-SNAPSHOT.jar true
     Connected to Redis!
-    Weighted total posts: 1996.0
-    Weighted average replies per post: 2.73495085995086
+    Weighted total posts: 1994.0
+    Weighted average replies per post: 2.737165693206271
     Overall average interval between comments: 04:35:10
     Redis connection ended...
+
 
 Run-Down of the program:
 

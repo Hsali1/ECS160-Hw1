@@ -57,9 +57,17 @@ public class SocialMediaAnalyzer {
     }
 
     // return number of posts in db
-    public long countPosts() { // int or long?
+    public int countPosts() { // int or long?
         // all posts have a key starting with "posts:"
-        return redisDb.getKeys("post:*").size();
+        Set<String> postKeys = redisDb.getKeys("post:*");
+        int counter = 0;
+        for (String postKey : postKeys) {
+            if (postKey.endsWith(":replies")) {
+                continue;
+            }
+            counter++;
+        }
+        return counter;
     }
 
     public void countReplies() {
