@@ -24,7 +24,7 @@ fi
 # Default input.json, non-weighted
 echo ">>>>>>>>>>> CHECKING THE APP RUNS"
 
-output=$(java -jar target/HW1-solution-1.0-SNAPSHOT.jar --weighted false --file "/update/this/to/provide/an/absolute/path/input.json")
+output=$(java -jar target/HW1-solution-1.0-SNAPSHOT.jar --weighted false --file "/home/hassan/classes/ECS160/hw/hw1/ECS160-HW1-skeleton/src/main/resources/input.json")
 
 if [ $? -eq 0 ]; then
 	echo "Execution succeeded"
@@ -77,7 +77,7 @@ else
 	echo "$test_run_output"
 fi
 
-tests_run=$(echo "$test_run_output" | grep "Tests run: \d+" | grep -v "elapsed" | awk -F": " '{print $2}')
+tests_run=$(echo "$test_run_output" | grep "Tests run: [0\9]*" | grep -v "elapsed" | awk -F'Tests run: |, ' '{print $2}')
 tests_run=$(echo "$tests_run" | tr -d ' \n')
 
 echo "Number of tests run: $tests_run"
@@ -100,9 +100,9 @@ fi
 
 ### Check the number of classes. We will also manually evaluate the design
 
-if [[ $(find . -name "*.class"  | wc | awk '{print $1}' | bc ) -gt 4 ]] ; 
-then 
-	echo "More than 4 classes created."; 
+if [[ $(find . -name "*.class"  | wc | awk '{print $1}' | bc ) -gt 4 ]] ;
+then
+	echo "More than 4 classes created.";
 else
 	echo "Fewer than 4 classes created."
 fi

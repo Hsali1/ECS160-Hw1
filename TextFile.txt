@@ -1,0 +1,52 @@
+
+Link To Github: https://github.com/Hsali1/ECS160-Hw1
+
+## Running the code
+
+Navigate to root
+
+Install all dependencies:
+```
+mvn clean install
+```
+
+compile the code and create .jar file:
+```
+mvn clean package
+```
+
+Run the code:
+
+```
+java -jar target/HW1-solution-1.0-SNAPSHOT.jar {weighted} [file name]
+
+```
+weighted = true | false
+
+The default filename used is src/main/resources/input.json
+
+Results:
+
+1.
+    >java -jar target/HW1-solution-1.0-SNAPSHOT.jar false
+    Connected to Redis!
+    Total posts: 3256
+    Average replies per post: 1.5167919799498746
+    Overall average interval between comments: 04:35:10
+    Redis connection ended...
+
+2.
+    java -jar target/HW1-solution-1.0-SNAPSHOT.jar true
+    Connected to Redis!
+    Weighted total posts: 1996.0
+    Weighted average replies per post: 2.73495085995086
+    Overall average interval between comments: 04:35:10
+    Redis connection ended...
+
+Run-Down of the program:
+
+- main class decided what file will be used and calls parseDataIntoDatabase()
+- parseDataIntoDatabase gets thread objects and calls processThread() method
+- processThread gets the relevant post and reply info and returns it to parseDataIntoDatabase
+- parseDataIntoDatabase then loads the posts and calls storeReplies to load the replies
+- The statistics are done in SocialMediaAnalyzer.java
