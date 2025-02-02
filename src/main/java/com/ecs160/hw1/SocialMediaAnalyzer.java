@@ -234,8 +234,11 @@ public class SocialMediaAnalyzer {
     /* Weight = (1 + (NumOfWordsInPost / NumOfWordsInLongestPost)) */
     public double postWeight(String postId) {
         if (longestPost  == 0)
-            return 0;
+            return 1;
         Map<String, String> post = redisDb.getPost(postId);
+        if (post == null || !post.containsKey("text")){
+            return 1;
+        }
         // retrieve post content
         String postContent = post.get("text");
         // count words in post
@@ -245,8 +248,11 @@ public class SocialMediaAnalyzer {
     }
     public double replyWeight(String replyId) {
         if (longestPost  == 0)
-            return 0;
+            return 1;
         Map<String, String> reply = redisDb.getReply(replyId);
+        if (reply == null || !reply.containsKey("text")){
+            return 1;
+        }
         // retrieve post content
         String replyContent = reply.get("text");
         // count words in post

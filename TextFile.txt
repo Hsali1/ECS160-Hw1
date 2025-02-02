@@ -1,5 +1,17 @@
+Members:
+    -Hassan Ali - 921441638
+    -Natalia Rascon - 921491808
 
 Link To Github: https://github.com/Hsali1/ECS160-Hw1
+
+Link to GitHub with Tag: [ECS160-Hw1 (v1.1)](https://github.com/Hsali1/ECS160-Hw1/tree/v1.1)
+
+Clone and Check Out Tag
+
+    git clone https://github.com/Hsali1/ECS160-Hw1.git
+    cd ECS160-Hw1
+    git checkout v1.1
+
 
 ## Running the code
 
@@ -42,7 +54,6 @@ Results:
     Weighted average replies per post: 2.737165693206271
     Overall average interval between comments: 04:35:10
     Redis connection ended...
-
 
 Run-Down of the program:
 
