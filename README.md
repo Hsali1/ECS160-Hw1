@@ -1,3 +1,5 @@
+![Build Status](https://github.com/Hsali1/ECS160-Hw1/actions/workflows/maven.yml/badge.svg)
+
 
 Issues to fix:
 ```
