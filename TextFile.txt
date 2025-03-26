@@ -1,6 +1,6 @@
 Members:
-    -Hassan Ali - 921441638
-    -Natalia Rascon - 921491808
+    -Hassan Ali
+    -Natalia Rascon
 
 Link To Github: https://github.com/Hsali1/ECS160-Hw1
 
